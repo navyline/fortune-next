@@ -1,101 +1,108 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import fortunes from "@/utils/fortunesData";
+
+const FortunePage = () => {
+  const [selectedFortune, setSelectedFortune] = useState(null);
+  const [showFortune, setShowFortune] = useState(false);
+  const [isShaking, setIsShaking] = useState(false); // สำหรับแอนิเมชันเขย่า
+  const [isDeviceShaking, setIsDeviceShaking] = useState(false); // ใช้ตรวจจับการเขย่ามือถือ
+
+  const handleRandomPick = () => {
+    setShowFortune(false);
+    setIsShaking(true); // เริ่มแอนิเมชันเขย่า
+
+    setTimeout(() => {
+      setIsShaking(false); // หยุดแอนิเมชันเขย่า
+      const randomIndex = Math.floor(Math.random() * fortunes.length);
+      setSelectedFortune(fortunes[randomIndex]);
+      setShowFortune(true); // แสดงคำทำนาย
+    }, 3000); // เขย่า 3 วินาที
+  };
+
+  useEffect(() => {
+    const handleDeviceMotion = (event) => {
+      const { accelerationIncludingGravity } = event;
+      const x = accelerationIncludingGravity.x || 0;
+      const y = accelerationIncludingGravity.y || 0;
+      const z = accelerationIncludingGravity.z || 0;
+
+      const totalAcceleration = Math.abs(x) + Math.abs(y) + Math.abs(z);
+
+      if (totalAcceleration > 15) {
+        setIsDeviceShaking(true);
+        setShowFortune(false);
+      } else if (isDeviceShaking) {
+        setIsDeviceShaking(false);
+        handleRandomPick(); // หยุดเขย่าแล้วสุ่มคำทำนาย
+      }
+    };
+
+    if ("ondevicemotion" in window) {
+      window.addEventListener("devicemotion", handleDeviceMotion);
+    }
+
+    return () => {
+      window.removeEventListener("devicemotion", handleDeviceMotion);
+    };
+  }, [isDeviceShaking]);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-b from-red-600 to-yellow-400 flex flex-col items-center justify-center text-center p-4">
+      <h1 className="text-4xl font-extrabold mb-8 text-yellow-200 drop-shadow-lg">
+        สนุกเซียมซี โชคดีรับตรุษจีน
+      </h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      {/* กล่องเซียมซี */}
+      <motion.div
+        className="w-56 h-56 bg-yellow-300 rounded-full shadow-2xl flex items-center justify-center cursor-pointer border-4 border-yellow-500"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={handleRandomPick}
+      >
+        <motion.img
+          src="https://mkws.ac.th/guanaim03/app/mk-ss.png"
+          alt="เซียมซี"
+          className="w-32 h-32"
+          animate={
+            isShaking || isDeviceShaking
+              ? { rotate: [-5, 5, -5, 5, 0] } // เขย่าไปซ้าย-ขวา
+              : { y: [-10, 0, -10] } // ลอยขึ้นลงเมื่อไม่ได้เขย่า
+          }
+          transition={
+            isShaking || isDeviceShaking
+              ? { repeat: Infinity, duration: 0.2 } // ความเร็วในการเขย่า
+              : { repeat: Infinity, duration: 2 } // ความเร็วในการลอย
+          }
+        />
+      </motion.div>
+
+      {/* แสดงผลคำทำนาย */}
+      <div className="mt-6 w-full max-w-sm">
+        {showFortune && selectedFortune && (
+          <motion.div
+            className="p-6 bg-white rounded-lg shadow-lg border-2 border-yellow-400 text-left"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+            <h2 className="text-xl font-bold text-red-600 mb-3">
+              เซียมซีใบที่ {selectedFortune.number}
+            </h2>
+            <p className="text-gray-800 text-base leading-relaxed">
+              {selectedFortune.message}
+            </p>
+          </motion.div>
+        )}
+      </div>
+
+      <footer className="mt-12 text-sm text-yellow-200 drop-shadow-md">
+        เขย่ามือถือหรือคลิกกล่องเพื่อสุ่มเซียมซี
       </footer>
     </div>
   );
-}
+};
+
+export default FortunePage;
