@@ -9,17 +9,20 @@ const FortunePage = () => {
   const [showFortune, setShowFortune] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [isDeviceShaking, setIsDeviceShaking] = useState(false);
+  const [canShake, setCanShake] = useState(true); // ใช้ตรวจสอบว่าสุ่มใหม่ได้หรือไม่
 
   const handleRandomPick = () => {
+    if (!canShake) return; // ป้องกันการสุ่มใหม่
     setShowFortune(false);
     setIsShaking(true);
+    setCanShake(false); // หยุดให้สุ่มใหม่จนกว่าจะกดปุ่มสุ่มใหม่
 
     setTimeout(() => {
       setIsShaking(false);
       const randomIndex = Math.floor(Math.random() * fortunes.length);
       setSelectedFortune(fortunes[randomIndex]);
       setShowFortune(true);
-    }, 2000);
+    }, 3000);
   };
 
   useEffect(() => {
@@ -31,7 +34,7 @@ const FortunePage = () => {
 
       const totalAcceleration = Math.abs(x) + Math.abs(y) + Math.abs(z);
 
-      if (totalAcceleration > 15) {
+      if (totalAcceleration > 15 && canShake) {
         setIsDeviceShaking(true);
         setShowFortune(false);
       } else if (isDeviceShaking) {
@@ -47,11 +50,12 @@ const FortunePage = () => {
     return () => {
       window.removeEventListener("devicemotion", handleDeviceMotion);
     };
-  }, [isDeviceShaking]);
+  }, [isDeviceShaking, canShake]);
 
   const handleReset = () => {
     setShowFortune(false);
     setSelectedFortune(null);
+    setCanShake(true); // เปิดให้สุ่มใหม่ได้อีกครั้ง
   };
 
   return (
@@ -68,8 +72,8 @@ const FortunePage = () => {
       {!showFortune ? (
         <motion.div
           className="w-56 h-56 bg-yellow-300 rounded-full shadow-2xl flex items-center justify-center cursor-pointer border-4 border-yellow-500"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={canShake ? { scale: 1.1 } : {}}
+          whileTap={canShake ? { scale: 0.9 } : {}}
           onClick={handleRandomPick}
         >
           <motion.img
