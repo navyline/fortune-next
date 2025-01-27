@@ -34,7 +34,7 @@ const FortunePage = () => {
 
       const totalAcceleration = Math.abs(x) + Math.abs(y) + Math.abs(z);
 
-      if (totalAcceleration > 15 && canShake) {
+      if (totalAcceleration > 30 && canShake) {
         setIsDeviceShaking(true);
         setShowFortune(false);
       } else if (isDeviceShaking) {
