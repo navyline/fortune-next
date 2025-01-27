@@ -8,23 +8,21 @@ const FortunePage = () => {
   const [selectedFortune, setSelectedFortune] = useState(null);
   const [showFortune, setShowFortune] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
-  const [isDeviceShaking, setIsDeviceShaking] = useState(false);
-  const [canShake, setCanShake] = useState(true); // ใช้ตรวจสอบว่าสุ่มใหม่ได้หรือไม่
+  const [isDeviceShaking, setIsDeviceShaking] = useState(false); // จับการเขย่ามือถือ
 
   const handleRandomPick = () => {
-    if (!canShake) return; // ป้องกันการสุ่มใหม่
     setShowFortune(false);
-    setIsShaking(true);
-    setCanShake(false); // หยุดให้สุ่มใหม่จนกว่าจะกดปุ่มสุ่มใหม่
+    setIsShaking(true); // เริ่มอนิเมชันเขย่า
 
     setTimeout(() => {
-      setIsShaking(false);
+      setIsShaking(false); // หยุดอนิเมชันเขย่า
       const randomIndex = Math.floor(Math.random() * fortunes.length);
       setSelectedFortune(fortunes[randomIndex]);
-      setShowFortune(true);
-    }, 3000);
+      setShowFortune(true); // แสดงคำทำนาย
+    }, 2000); // ระยะเวลาเขย่า
   };
 
+  // ฟังก์ชันจับการเขย่าบนมือถือ
   useEffect(() => {
     const handleDeviceMotion = (event) => {
       const { accelerationIncludingGravity } = event;
@@ -34,12 +32,12 @@ const FortunePage = () => {
 
       const totalAcceleration = Math.abs(x) + Math.abs(y) + Math.abs(z);
 
-      if (totalAcceleration > 15 && canShake) {
-        setIsDeviceShaking(true);
-        setShowFortune(false);
+      if (totalAcceleration > 15) {
+        setIsDeviceShaking(true); // เริ่มเขย่า
+        setShowFortune(false); // ซ่อนคำทำนายระหว่างเขย่า
       } else if (isDeviceShaking) {
-        setIsDeviceShaking(false);
-        handleRandomPick();
+        setIsDeviceShaking(false); // หยุดเขย่า
+        handleRandomPick(); // เริ่มสุ่มคำทำนายเมื่อหยุดเขย่า
       }
     };
 
@@ -50,88 +48,70 @@ const FortunePage = () => {
     return () => {
       window.removeEventListener("devicemotion", handleDeviceMotion);
     };
-  }, [isDeviceShaking, canShake]);
-
-  const handleReset = () => {
-    setShowFortune(false);
-    setSelectedFortune(null);
-    setCanShake(true); // เปิดให้สุ่มใหม่ได้อีกครั้ง
-  };
+  }, [isDeviceShaking]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-600 to-yellow-400 flex flex-col items-center justify-center text-center p-4">
-      <motion.h1
-        className="text-4xl font-extrabold mb-8 text-yellow-200 drop-shadow-lg"
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
-      >
+      <h1 className="text-4xl font-extrabold mb-8 text-yellow-200 drop-shadow-lg">
         สนุกเซียมซี โชคดีรับตรุษจีน
-      </motion.h1>
+      </h1>
 
-      {!showFortune ? (
-        <motion.div
-          className="w-56 h-56 bg-yellow-300 rounded-full shadow-2xl flex items-center justify-center cursor-pointer border-4 border-yellow-500"
-          whileHover={canShake ? { scale: 1.1 } : {}}
-          whileTap={canShake ? { scale: 0.9 } : {}}
-          onClick={handleRandomPick}
-        >
-          <motion.img
-            src="https://mkws.ac.th/guanaim03/app/mk-ss.png"
-            alt="เซียมซี"
-            className="w-32 h-32"
-            animate={
-              isShaking || isDeviceShaking
-                ? { rotate: [-10, 10, -10, 10, 0] }
-                : { y: [-10, 0, -10] }
-            }
-            transition={
-              isShaking || isDeviceShaking
-                ? { repeat: Infinity, duration: 0.15 }
-                : { repeat: Infinity, duration: 1.5 }
-            }
-          />
-        </motion.div>
-      ) : (
-        <motion.div
-          className="p-6 bg-white rounded-lg shadow-lg border-2 border-yellow-400 text-left w-full max-w-sm"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 10 }}
-        >
+      {/* กล่องเซียมซี */}
+      <motion.div
+        className="w-56 h-56 bg-yellow-300 rounded-full shadow-2xl flex items-center justify-center border-4 border-yellow-500 cursor-pointer"
+        onClick={handleRandomPick}
+      >
+        <motion.img
+          src="https://mkws.ac.th/guanaim03/app/mk-ss.png"
+          alt="เซียมซี"
+          className="w-32 h-32"
+          animate={
+            isShaking || isDeviceShaking
+              ? { rotate: [-10, 10, -10], y: [0, -10, 0] } // เขย่าซ้ายขวา+ขึ้นลง
+              : { y: [-10, 0, -10] } // ลอยขึ้นลงเมื่อไม่ได้เขย่า
+          }
+          transition={
+            isShaking || isDeviceShaking
+              ? { repeat: Infinity, duration: 0.2 } // ความเร็วในการเขย่า
+              : { repeat: Infinity, duration: 2 } // ความเร็วในการลอย
+          }
+        />
+      </motion.div>
+
+      {/* แสดงผลคำทำนาย */}
+      <div className="mt-6 w-full max-w-sm">
+        {showFortune && selectedFortune && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", duration: 0.7 }}
+            className="p-6 bg-white rounded-lg shadow-lg border-2 border-yellow-400 text-left"
+            initial={{ opacity: 0, y: -50, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
           >
-            <h2 className="text-2xl font-bold text-red-600 mb-3 text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-3">
               เซียมซีใบที่ {selectedFortune.number}
             </h2>
-            <p className="text-gray-800 text-base leading-relaxed text-center">
+            <p className="text-gray-800 text-base leading-relaxed">
               {selectedFortune.message}
             </p>
           </motion.div>
-          <motion.button
-            onClick={handleReset}
-            className="mt-6 w-full bg-gradient-to-r from-yellow-500 to-red-500 text-white py-3 px-6 rounded-full text-lg shadow-lg font-semibold hover:from-yellow-400 hover:to-red-400 transform transition-transform hover:scale-105"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            เริ่มสุ่มใหม่
-          </motion.button>
-        </motion.div>
+        )}
+      </div>
+
+      {/* ปุ่มเริ่มใหม่ */}
+      {showFortune && (
+        <motion.button
+          className="mt-6 px-6 py-3 bg-red-500 text-yellow-100 rounded-lg shadow-lg text-lg font-bold"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setSelectedFortune(null)}
+        >
+          สุ่มใหม่
+        </motion.button>
       )}
 
-      {!showFortune && (
-        <motion.footer
-          className="mt-12 text-sm text-yellow-200 drop-shadow-md"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          เขย่ามือถือหรือคลิกกล่องเพื่อสุ่มเซียมซี
-        </motion.footer>
-      )}
+      <footer className="mt-12 text-sm text-yellow-200 drop-shadow-md">
+        เขย่ามือถือหรือคลิกกล่องเพื่อสุ่มเซียมซี
+      </footer>
     </div>
   );
 };
