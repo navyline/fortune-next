@@ -111,7 +111,7 @@ const FortunePage = () => {
               {selectedFortune.message}
             </p>
             <p className="text-sm text-yellow-600 text-center">
-              วัด: {selectedFortune.temple}
+              ที่มา: {selectedFortune.temple}
             </p>
           </motion.div>
           <motion.button
