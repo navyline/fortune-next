@@ -127,7 +127,7 @@ const FortunePage = () => {
 
       {!showFortune && (
         <motion.footer
-          className="mt-12 text-sm text-yellow-200 drop-shadow-md"
+          className="mt-12 text-3xl text-yellow-200 drop-shadow-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
